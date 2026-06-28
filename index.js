@@ -32,7 +32,7 @@ app.get('/price', async (req, res) => {
 
   try {
     const username = getRandom(USERNAMES);
-    const url = `https://www.cardmarket.com/es/Pokemon/Products/Singles?searchString=${encodeURIComponent(name)}&sortBy=price_asc&minCondition=7`;
+    const url = `https://www.tcgplayer.com/search/pokemon/product?q=${encodeURIComponent(name)}&view=grid`;
 
     const response = await axios.get(url, {
       proxy: {
@@ -42,11 +42,10 @@ app.get('/price', async (req, res) => {
       },
       headers: {
         'User-Agent': getRandom(USER_AGENTS),
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
         'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
         'Cache-Control': 'max-age=0'
       },
       timeout: 15000
@@ -56,21 +55,21 @@ app.get('/price', async (req, res) => {
     
     let price = '';
     const selectors = [
-      '.price-container span',
-      '.col-price span', 
-      '.article-price',
-      '.price'
+      '.inventory__price-with-shipping',
+      '.product-card__market-price',
+      '.price-point__data',
+      '[data-testid="product-card-market-price"]'
     ];
     
     for (const sel of selectors) {
       const found = $(sel).first().text().trim();
-      if (found && found.includes('€')) {
+      if (found && found.includes('$')) {
         price = found;
         break;
       }
     }
 
-    res.json({ name, price: price || 'Sin precio' });
+    res.json({ name, price: price || 'Sin precio', source: 'TCGPlayer' });
   } catch (err) {
     res.json({ error: err.message });
   }
